@@ -234,8 +234,7 @@ int
 CurlStack::set_timeout(void*, long timeout_ms, void* userp) {
   CurlStack* stack = (CurlStack*)userp;
 
-  priority_queue_erase(&taskScheduler, &stack->m_taskTimeout);
-  priority_queue_insert(&taskScheduler,
+  priority_queue_upsert(&taskScheduler,
                         &stack->m_taskTimeout,
                         cachedTime +
                           torrent::utils::timer::from_milliseconds(timeout_ms));

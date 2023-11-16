@@ -27,8 +27,7 @@ Manager::force_redraw() {
 
 void
 Manager::schedule(Window* w, torrent::utils::timer t) {
-  torrent::utils::priority_queue_erase(&m_scheduler, w->task_update());
-  torrent::utils::priority_queue_insert(&m_scheduler, w->task_update(), t);
+  torrent::utils::priority_queue_upsert(&m_scheduler, w->task_update(), t);
   schedule_update(50000);
 }
 
@@ -79,8 +78,7 @@ Manager::schedule_update(uint32_t minInterval) {
 
   if (!m_taskUpdate.is_queued() ||
       m_taskUpdate.time() > m_scheduler.top()->time()) {
-    torrent::utils::priority_queue_erase(&taskScheduler, &m_taskUpdate);
-    torrent::utils::priority_queue_insert(
+    torrent::utils::priority_queue_upsert(
       &taskScheduler,
       &m_taskUpdate,
       std::max(m_scheduler.top()->time(), m_timeLastUpdate + minInterval));

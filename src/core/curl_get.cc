@@ -53,8 +53,7 @@ CurlGet::start() {
     // Normally libcurl should handle the timeout. But sometimes that doesn't
     // work right so we do a fallback timeout that just aborts the transfer.
     m_taskTimeout.slot() = [this] { receive_timeout(); };
-    priority_queue_erase(&taskScheduler, &m_taskTimeout);
-    priority_queue_insert(&taskScheduler,
+    priority_queue_upsert(&taskScheduler,
                           &m_taskTimeout,
                           cachedTime +
                             torrent::utils::timer::from_seconds(m_timeout + 5));

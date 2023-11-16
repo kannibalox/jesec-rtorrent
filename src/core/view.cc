@@ -130,8 +130,7 @@ struct view_downloads_filter {
 
 void
 View::emit_changed() {
-  priority_queue_erase(&taskScheduler, &m_delayChanged);
-  priority_queue_insert(&taskScheduler, &m_delayChanged, cachedTime);
+  priority_queue_upsert(&taskScheduler, &m_delayChanged, cachedTime);
 }
 
 void
