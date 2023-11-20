@@ -4,9 +4,9 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
     name = "libtorrent",
-    sha256 = "57422c8bbf402bc0669b008f4ddaf1674cc7d5b4a9f6e5aa1e237b99eed840b4",
-    strip_prefix = "libtorrent-3a87f4acfcdd6c153dd4eaccca97870489b53885",
-    url = "https://github.com/jesec/libtorrent/archive/3a87f4acfcdd6c153dd4eaccca97870489b53885.zip",
+    #sha256 = "57422c8bbf402bc0669b008f4ddaf1674cc7d5b4a9f6e5aa1e237b99eed840b4",
+    strip_prefix = "jesec-libtorrent-kannox-master/",
+    url = "https://github.com/kannibalox/jesec-libtorrent/archive/refs/heads/kannox-master.zip",
 )
 
 load("@libtorrent//:libtorrent_repos.bzl", "libtorrent_repos")
