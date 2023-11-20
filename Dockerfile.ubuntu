@@ -47,7 +47,7 @@ WORKDIR /root
 
 RUN apt update -yqq && \
     apt dist-upgrade -yqq && \
-    apt install -yqq python3-pip git file libc6-prof libstdc++6-10-dbg && \
+    apt install -yqq python3-pip git && \
     apt clean all
 
 # Install rTorrent and dependencies to new system root
@@ -59,8 +59,6 @@ RUN pip install git+https://github.com/kannibalox/pyrosimple.git
 
 RUN mkdir /home/download
 RUN chown 1002:1002 /home/download
-
-ENV LD_LIBRARY_PATH /lib/libc6-prof/x86_64-linux-gnu
 
 WORKDIR /home/download
 # Run as 1001:1001 user
