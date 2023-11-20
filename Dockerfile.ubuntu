@@ -1,0 +1,70 @@
+ARG UBUNTU_VERSION=22.04
+
+FROM ubuntu:${UBUNTU_VERSION} as build
+
+WORKDIR /root/rtorrent
+
+# Install build dependencies
+RUN apt update -yqq && apt install -yqq \
+    build-essential \
+    wget \
+    curl \
+    bash \
+    clang \
+    python3 \
+    python3-pip
+
+RUN wget -q https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64 -O /usr/local/bin/bazel && chmod +x /usr/local/bin/bazel
+
+# Checkout rTorrent sources from current directory
+COPY . ./
+
+# # Checkout rTorrent sources from Github repository
+# RUN git clone https://github.com/jesec/rtorrent .
+
+SHELL ["/bin/bash", "-c"]
+
+# Set architecture for packages
+RUN if [[ `uname -m` == "aarch64" ]]; \
+    then sed -i 's/architecture = \"all\"/architecture = \"arm64\"/' BUILD.bazel; \
+    elif [[ `uname -m` == "x86_64" ]]; \
+    then sed -i 's/architecture = \"all\"/architecture = \"amd64\"/' BUILD.bazel; \
+    fi
+
+# Build rTorrent packages
+RUN CC=clang bazel build -c dbg rtorrent-deb --verbose_failures
+
+# Copy outputs
+RUN mkdir dist
+RUN cp -L bazel-bin/rtorrent dist/
+RUN cp -L bazel-bin/rtorrent-deb.deb dist/
+
+# Now get the clean image
+FROM ubuntu:${UBUNTU_VERSION} as rtorrent
+
+WORKDIR /root
+
+RUN apt update -yqq && \
+    apt dist-upgrade -yqq && \
+    apt install -yqq python3-pip git file libc6-prof libstdc++6-10-dbg && \
+    apt clean all
+
+# Install rTorrent and dependencies to new system root
+COPY --from=build /root/rtorrent/dist/rtorrent-deb.deb .
+
+RUN apt install -yqq ./rtorrent-deb.deb
+
+RUN pip install git+https://github.com/kannibalox/pyrosimple.git
+
+RUN mkdir /home/download
+RUN chown 1002:1002 /home/download
+
+ENV LD_LIBRARY_PATH /lib/libc6-prof/x86_64-linux-gnu
+
+WORKDIR /home/download
+# Run as 1001:1001 user
+ENV HOME=/home/download
+USER 1002:1002
+
+# rTorrent
+ENTRYPOINT ["rtorrent"]
