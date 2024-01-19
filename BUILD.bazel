@@ -81,6 +81,7 @@ cc_library(
     }),
     deps = [
         "//:buildinfo",
+        "@lua",
         "@curl",
         "@json",
         "@xmlrpc",

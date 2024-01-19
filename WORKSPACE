@@ -80,6 +80,16 @@ http_archive(
 )
 
 http_archive(
+    name = "lua",
+    build_file = "@rtorrent//:third_party/lua.BUILD",
+    strip_prefix = "lua-5.4.6",
+    sha256 = "7d5ea1b9cb6aa0b59ca3dde1c6adcb57ef83a1ba8e5432c0ecd06bf439b3ad88",
+    urls = [
+        "https://www.lua.org/ftp/lua-5.4.6.tar.gz",
+    ],
+)
+
+http_archive(
     name = "json",
     build_file = "@rtorrent//:third_party/json.BUILD",
     sha256 = "b94997df68856753b72f0d7a3703b7d484d4745c567f3584ef97c96c25a5798e",

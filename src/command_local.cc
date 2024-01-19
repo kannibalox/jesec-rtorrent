@@ -22,6 +22,7 @@
 #include "core/download_list.h"
 #include "core/download_store.h"
 #include "core/manager.h"
+#include "rpc/lua.h"
 #include "rpc/parse_commands.h"
 #include "rpc/scgi.h"
 #include "utils/file_status_cache.h"
@@ -205,6 +206,7 @@ void
 initialize_command_local() {
   core::DownloadList*    dList        = control->core()->download_list();
   core::DownloadStore*   dStore       = control->core()->download_store();
+  rpc::LuaEngine*        luaEngine    = control->lua_engine();
   torrent::ChunkManager* chunkManager = torrent::chunk_manager();
   torrent::FileManager*  fileManager  = torrent::file_manager();
 
@@ -376,6 +378,19 @@ initialize_command_local() {
   CMD2_ANY_V("session.save", [dList](const auto&, const auto&) {
     return dList->session_save();
   });
+
+  CMD2_ANY("lua.execute",
+           std::bind(&rpc::execute_lua, luaEngine, std::placeholders::_2, 0));
+  CMD2_ANY("lua.execute.str",
+           std::bind(&rpc::execute_lua,
+                     luaEngine,
+                     std::placeholders::_2,
+                     rpc::LuaEngine::flag_string));
+  CMD2_ANY("lua.import",
+           std::bind(&rpc::execute_lua,
+                     luaEngine,
+                     std::placeholders::_2,
+                     rpc::LuaEngine::flag_autocall_upvalue));
 
 #define CMD2_EXECUTE(key, flags)                                               \
   CMD2_ANY(key, [](const auto&, const auto& rawArgs) {                         \

@@ -37,6 +37,7 @@ namespace rpc {
 class CommandScheduler;
 class XmlRpc;
 class object_storage;
+class LuaEngine;
 }
 
 namespace torrent {
@@ -99,6 +100,7 @@ public:
   rpc::object_storage* object_storage() {
     return m_objectStorage;
   }
+  rpc::LuaEngine*        lua_engine()               { return m_luaEngine; }
 
   torrent::directory_events* directory_events() {
     return m_directory_events;
@@ -135,6 +137,7 @@ private:
 
   rpc::CommandScheduler*     m_commandScheduler;
   rpc::object_storage*       m_objectStorage;
+  rpc::LuaEngine*            m_luaEngine;
   torrent::directory_events* m_directory_events;
 
   uint64_t m_tick{ 0 };
