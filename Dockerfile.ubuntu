@@ -33,7 +33,7 @@ RUN if [[ `uname -m` == "aarch64" ]]; \
     fi
 
 # Build rTorrent packages
-RUN CC=clang bazel build ${BAZEL_OPTS} rtorrent-deb --verbose_failures
+RUN CC=clang bazel build ${BAZEL_OPTS} rtorrent-deb --spawn_strategy=local --noenable_bzlmod --verbose_failures
 
 # Copy outputs
 RUN mkdir dist
