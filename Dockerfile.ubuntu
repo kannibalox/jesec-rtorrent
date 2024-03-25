@@ -1,8 +1,8 @@
 ARG UBUNTU_VERSION=22.04
-ARG BAZEL_OPTS=""
 
 FROM ubuntu:${UBUNTU_VERSION} as build
 
+ARG BAZEL_OPTS=""
 WORKDIR /root/rtorrent
 
 # Install build dependencies
