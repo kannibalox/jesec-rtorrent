@@ -28,11 +28,14 @@ Manager::erase(Bindings* b) {
 
 void
 Manager::pressed(int key) {
-  if (m_textInput != nullptr)
+  if (m_textInput != nullptr) {
     m_textInput->pressed(key);
-  else
-    std::find_if(
-      rbegin(), rend(), [key](Bindings* b) { return b->pressed(key); });
+  } else {
+    for (auto itr : *this) {
+      if (itr->pressed(key))
+        return;
+    }
+  }
 }
 
 }
