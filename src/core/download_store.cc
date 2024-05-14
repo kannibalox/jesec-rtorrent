@@ -82,22 +82,12 @@ bool
 DownloadStore::write_bencode(const std::string&     filename,
                              const torrent::Object& obj,
                              uint32_t               skip_mask) {
-  torrent::Object tmp;
   std::fstream    output(filename.c_str(), std::ios::out | std::ios::trunc);
 
   if (!output.is_open())
     goto download_store_save_error;
 
   torrent::object_write_bencode(&output, &obj, skip_mask);
-
-  if (!output.good())
-    goto download_store_save_error;
-
-  output.close();
-
-  // Test the new file, to ensure it is a valid bencode string.
-  output.open(filename.c_str(), std::ios::in);
-  output >> tmp;
 
   if (!output.good())
     goto download_store_save_error;
