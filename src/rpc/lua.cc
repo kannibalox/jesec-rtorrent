@@ -247,7 +247,6 @@ rtorrent_call(lua_State* L) {
   lua_remove(L, 1);
   torrent::Object  object;
   rpc::target_type target = rpc::make_target();
-  ;
   rpc::CommandMap::iterator itr =
     rpc::commands.find(std::string(method).c_str());
   if (itr == rpc::commands.end()) {
