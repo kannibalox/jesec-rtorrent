@@ -111,12 +111,12 @@ torrent::Object
 json_to_object(const json& value, int callType, rpc::target_type* target) {
   switch (value.type()) {
     case json::value_t::number_integer:
-      return torrent::Object(value.get<int64_t>());
+      return {value.get<int64_t>()};
     case json::value_t::boolean:
       return value.get<bool>() ? torrent::Object(int64_t(1))
                                : torrent::Object(int64_t(0));
     case json::value_t::string:
-      return torrent::Object(value.get<std::string>());
+      return {value.get<std::string>()};
     case json::value_t::array: {
       const auto& count = value.size();
 
@@ -141,7 +141,7 @@ json_to_object(const json& value, int callType, rpc::target_type* target) {
       }
 
       if (count == 0) {
-        return torrent::Object();
+        return {};
       } else if (start == count - 1) {
         return json_to_object(value[start], callType, target);
       } else {
@@ -231,7 +231,7 @@ jsonrpc_call_command(const std::string& method, const json& params) {
     return methods;
   }
 
-  CommandMap::iterator itr = commands.find(method.c_str());
+  auto itr = commands.find(method.c_str());
 
   if (itr == commands.end()) {
     throw JsonRpcException(-32601, "method not found: " + method);
