@@ -57,11 +57,7 @@ Directory::update(int flags) {
     itr->d_type   = entry->d_type;
 #endif
 
-#ifdef DIRENT_NAMLEN_EXISTS_FOOBAR
-    itr->d_name = std::string(entry->d_name, entry->d_name + entry->d_namlen);
-#else
-    itr->d_name   = std::string(entry->d_name);
-#endif
+    itr->d_name = std::string(entry->d_name);
   }
 
   closedir(d);
