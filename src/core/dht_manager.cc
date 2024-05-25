@@ -2,7 +2,6 @@
 // Copyright (C) 2005-2011, Jari Sundell <jaris@ifi.uio.no>
 
 #include <fstream>
-#include <sstream>
 #include <torrent/dht_manager.h>
 #include <torrent/object.h>
 #include <torrent/object_stream.h>

@@ -8,7 +8,6 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
-#include <inttypes.h>
 #include <iostream>
 #include <queue>
 #include <random>
@@ -39,11 +38,8 @@
 #include "display/canvas.h"
 #include "display/manager.h"
 #include "display/window.h"
-#include "input/bindings.h"
 #include "ui/root.h"
 
-#include "rpc/command_scheduler.h"
-#include "rpc/command_scheduler_item.h"
 #include "rpc/parse_commands.h"
 #include "utils/directory.h"
 #include "utils/indicators.h"

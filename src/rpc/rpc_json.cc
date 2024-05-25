@@ -6,12 +6,10 @@
 #ifdef HAVE_JSON
 
 #include <algorithm>
-#include <cstddef>
 #include <cstdint>
 #include <iterator>
 #include <string>
 #include <string_view>
-#include <vector>
 
 #include <nlohmann/json.hpp>
 

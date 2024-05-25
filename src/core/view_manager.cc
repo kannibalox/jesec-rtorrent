@@ -7,10 +7,7 @@
 
 #include "control.h"
 #include "globals.h"
-#include "rpc/parse_commands.h"
 
-#include "core/download.h"
-#include "core/download_list.h"
 #include "core/manager.h"
 #include "core/view.h"
 #include "core/view_manager.h"

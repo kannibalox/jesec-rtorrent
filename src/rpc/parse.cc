@@ -3,7 +3,6 @@
 
 #include <cstdio>
 #include <cstring>
-#include <locale>
 #include <torrent/exceptions.h>
 #include <torrent/utils/path.h>
 

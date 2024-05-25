@@ -2,7 +2,6 @@
 // Copyright (C) 2005-2011, Jari Sundell <jaris@ifi.uio.no>
 
 #include <algorithm>
-#include <stdexcept>
 
 #include "display/canvas.h"
 #include "display/window.h"

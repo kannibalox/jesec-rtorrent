@@ -7,11 +7,7 @@
 #include <torrent/utils/error_number.h>
 #include <torrent/utils/path.h>
 
-#include "core/manager.h"
-
 #include "command_helpers.h"
-#include "control.h"
-#include "globals.h"
 
 void
 apply_f_set_priority(torrent::File* file, uint32_t value) {

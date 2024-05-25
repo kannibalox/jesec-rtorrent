@@ -18,14 +18,11 @@
 #include "core/manager.h"
 #include "core/view_manager.h"
 #include "rpc/command_scheduler.h"
-#include "rpc/parse.h"
 #include "rpc/parse_commands.h"
 
 #include "command_helpers.h"
 #include "control.h"
 #include "globals.h"
-
-#include "thread_worker.h"
 
 torrent::Object
 apply_on_ratio(const torrent::Object& rawArgs) {

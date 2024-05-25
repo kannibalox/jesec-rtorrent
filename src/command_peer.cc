@@ -11,12 +11,9 @@
 #include <torrent/utils/socket_address.h>
 #include <torrent/utils/string_manip.h>
 
-#include "core/manager.h"
 #include "display/utils.h"
 
 #include "command_helpers.h"
-#include "control.h"
-#include "globals.h"
 
 torrent::Object
 retrieve_p_id(torrent::Peer* peer) {

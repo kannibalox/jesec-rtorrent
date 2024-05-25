@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2005-2011, Jari Sundell <jaris@ifi.uio.no>
 
-#include <cstdlib>
 #include <fstream>
 #include <functional>
 #include <sstream>
-#include <stdexcept>
 
 #include <torrent/data/file_utils.h>
 #include <torrent/exceptions.h>

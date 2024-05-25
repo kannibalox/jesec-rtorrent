@@ -11,7 +11,6 @@
 #include <torrent/utils/error_number.h>
 #include <torrent/utils/socket_address.h>
 
-#include "control.h"
 #include "globals.h"
 #include "rpc/parse_commands.h"
 #include "utils/socket_fd.h"

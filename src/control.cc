@@ -3,7 +3,6 @@
 
 #include "buildinfo.h"
 
-#include <csignal>
 #include <iostream>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -26,7 +25,6 @@
 #include "rpc/lua.h"
 #include "rpc/object_storage.h"
 #include "rpc/parse_commands.h"
-#include "rpc/scgi.h"
 #include "ui/root.h"
 
 #include "control.h"

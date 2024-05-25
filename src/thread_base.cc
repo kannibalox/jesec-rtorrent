@@ -3,11 +3,7 @@
 
 #include "thread_base.h"
 
-#include <cassert>
-#include <cstdlib>
 #include <cstring>
-#include <iostream>
-#include <signal.h>
 #include <torrent/exceptions.h>
 #include <torrent/torrent.h>
 #include <torrent/utils/cacheline.h>
@@ -15,8 +11,6 @@
 #include <torrent/utils/log.h>
 #include <unistd.h>
 
-#include "control.h"
-#include "core/manager.h"
 #include "globals.h"
 
 class lt_cacheline_aligned thread_queue_hack {

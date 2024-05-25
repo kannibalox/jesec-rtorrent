@@ -7,7 +7,6 @@
 
 #include <functional>
 
-#include <cctype>
 #include <limits>
 
 #include <stdlib.h>

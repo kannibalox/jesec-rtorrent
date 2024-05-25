@@ -11,7 +11,6 @@
 #include <torrent/utils/error_number.h>
 #include <torrent/utils/log.h>
 
-#include "control.h"
 #include "globals.h"
 #include "utils/socket_fd.h"
 

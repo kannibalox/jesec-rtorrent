@@ -2,7 +2,6 @@
 // Copyright (C) 2021, Contributors to the rTorrent project
 
 #include <cstring>
-#include <memory>
 
 #include <torrent/exceptions.h>
 

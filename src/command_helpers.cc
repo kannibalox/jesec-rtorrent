@@ -4,8 +4,6 @@
 #include <torrent/exceptions.h>
 
 #include "command_helpers.h"
-#include "control.h"
-#include "globals.h"
 
 void
 initialize_command_logic();

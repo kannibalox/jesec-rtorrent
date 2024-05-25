@@ -4,7 +4,6 @@
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
-#include <functional>
 #include <limits>
 #include <torrent/common.h>
 #include <unistd.h>

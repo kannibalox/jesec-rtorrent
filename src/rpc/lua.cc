@@ -1,9 +1,7 @@
-#include <fstream>
 #include <sys/stat.h>
 #include <unistd.h>
 
 #include "rpc/lua.h"
-#include <cstdint>
 #include <lua.hpp>
 
 #include <torrent/object.h>
@@ -13,7 +11,6 @@
 #include "rpc/command.h"
 #include "rpc/command_map.h"
 #include "rpc/parse_commands.h"
-#include "rpc/rpc_xml.h"
 
 namespace rpc {
 

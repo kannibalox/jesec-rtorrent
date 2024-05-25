@@ -4,7 +4,6 @@
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
-#include <fstream>
 #include <glob.h>
 #include <sstream>
 #include <sys/select.h>
@@ -35,7 +34,6 @@
 #include "core/download_store.h"
 #include "core/http_queue.h"
 #include "core/manager.h"
-#include "core/poll_manager.h"
 #include "core/view.h"
 #include "globals.h"
 

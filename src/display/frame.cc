@@ -2,7 +2,6 @@
 // Copyright (C) 2005-2011, Jari Sundell <jaris@ifi.uio.no>
 
 #include <algorithm>
-#include <functional>
 
 #include <torrent/exceptions.h>
 #include <torrent/utils/algorithm.h>

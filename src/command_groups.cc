@@ -8,11 +8,8 @@
 
 #include "rpc/parse.h"
 #include "rpc/parse_commands.h"
-#include "ui/root.h"
 
 #include "command_helpers.h"
-#include "control.h"
-#include "globals.h"
 
 // For cg_d_group.
 #include "core/download.h"

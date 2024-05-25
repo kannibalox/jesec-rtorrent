@@ -5,7 +5,6 @@
 #define RTORRENT_RPC_COMMAND_H
 
 #include <functional>
-#include <limits>
 #include <tuple>
 
 #include <torrent/data/file_list_iterator.h>

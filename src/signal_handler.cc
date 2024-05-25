@@ -3,7 +3,6 @@
 
 #include <signal.h>
 #include <stdexcept>
-#include <string>
 
 #include <torrent/utils/error_number.h>
 

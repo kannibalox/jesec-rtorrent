@@ -3,7 +3,6 @@
 
 #include <algorithm>
 #include <dirent.h>
-#include <functional>
 #include <sys/stat.h>
 
 #include <torrent/exceptions.h>
