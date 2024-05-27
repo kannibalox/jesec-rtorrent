@@ -32,7 +32,7 @@ object_to_lua(lua_State* L, torrent::Object const& object) {
   // Converts an object to a single Lua stack object
   switch (object.type()) {
     case torrent::Object::TYPE_VALUE:
-      lua_pushnumber(L, object.as_value());
+      lua_pushnumber(L, static_cast<double>(object.as_value()));
       break;
     case torrent::Object::TYPE_NONE:
       lua_pushnil(L);
@@ -41,7 +41,7 @@ object_to_lua(lua_State* L, torrent::Object const& object) {
       lua_pushstring(L, object.as_string().c_str());
       break;
     case torrent::Object::TYPE_LIST: {
-      lua_createtable(L, object.as_list().size(), 0);
+      lua_createtable(L, static_cast<int>(object.as_list().size()), 0);
       int index      = 1;
       int tableIndex = lua_gettop(L);
       for (const auto& itr : object.as_list()) {
@@ -51,7 +51,7 @@ object_to_lua(lua_State* L, torrent::Object const& object) {
       break;
     }
     case torrent::Object::TYPE_MAP: {
-      lua_createtable(L, 0, object.as_map().size());
+      lua_createtable(L, 0, static_cast<int>(object.as_map().size()));
       int tableIndex = lua_gettop(L);
       for (const auto& itr : object.as_map()) {
         object_to_lua(L, itr.second);
@@ -330,7 +330,7 @@ execute_lua(LuaEngine* engine, torrent::Object const& rawArgs, int flags) {
          itr++) {
       object_to_lua(L, *itr);
     }
-    lua_argc = args.size() - 1;
+    lua_argc = static_cast<int>(args.size()) - 1;
   } else {
     const torrent::Object::string_type& target = rawArgs.as_string();
     if (flags & LuaEngine::flag_string) {
