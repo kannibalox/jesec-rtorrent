@@ -44,7 +44,7 @@ Directory::update(int flags) {
     if ((flags & update_hide_dot) && entry->d_name[0] == '.')
       continue;
 
-    iterator itr = base_type::insert(end(), value_type());
+    auto itr = base_type::insert(end(), value_type());
 
 #ifdef __sun__
     stat(entry->d_name, &s);

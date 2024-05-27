@@ -44,10 +44,8 @@ object_to_lua(lua_State* L, torrent::Object const& object) {
       lua_createtable(L, object.as_list().size(), 0);
       int index      = 1;
       int tableIndex = lua_gettop(L);
-      for (auto itr = object.as_list().begin(), last = object.as_list().end();
-           itr != last;
-           itr++) {
-        object_to_lua(L, *itr);
+      for (const auto& itr : object.as_list()) {
+        object_to_lua(L, itr);
         lua_rawseti(L, tableIndex, lua_Integer(index++));
       }
       break;
@@ -55,11 +53,9 @@ object_to_lua(lua_State* L, torrent::Object const& object) {
     case torrent::Object::TYPE_MAP: {
       lua_createtable(L, 0, object.as_map().size());
       int tableIndex = lua_gettop(L);
-      for (auto itr = object.as_map().begin(), last = object.as_map().end();
-           itr != last;
-           itr++) {
-        object_to_lua(L, itr->second);
-        lua_pushlstring(L, itr->first.c_str(), itr->first.size());
+      for (const auto& itr : object.as_map()) {
+        object_to_lua(L, itr.second);
+        lua_pushlstring(L, itr.first.c_str(), itr.first.size());
         lua_settable(L, tableIndex);
       }
       break;
@@ -75,11 +71,11 @@ lua_to_object(lua_State* L, int index) {
   torrent::Object object;
   switch (lua_type(L, index)) {
     case LUA_TNUMBER:
-      return torrent::Object(lua_tonumber(L, index));
+      return {lua_tonumber(L, index)};
     case LUA_TSTRING:
-      return torrent::Object(lua_tostring(L, index));
+      return {lua_tostring(L, index)};
     case LUA_TBOOLEAN:
-      return torrent::Object(lua_toboolean(L, index));
+      return {lua_toboolean(L, index)};
     case LUA_TTABLE: {
       lua_pushnil(L);
       int status = lua_next(L, -2);
@@ -116,12 +112,12 @@ lua_to_object(lua_State* L, int index) {
         }
         return map;
       }
-      return torrent::Object(lua_tostring(L, index));
+      return { lua_tostring(L, index) };
     }
     default:
-      std::string result = luaL_tolstring(L, index, NULL);
+      std::string result = luaL_tolstring(L, index, nullptr);
       lua_pop(L, index + 1);
-      return torrent::Object(result);
+      return {result};
   }
   return object;
 }
@@ -209,7 +205,7 @@ lua_callstack_to_object(lua_State*        L,
                         rpc::target_type* target) {
   torrent::Object object;
   if (lua_gettop(L) == 0) {
-    return torrent::Object();
+    return {};
   }
 
   if (!lua_isstring(L, 1)) {
@@ -224,7 +220,7 @@ lua_callstack_to_object(lua_State*        L,
   lua_remove(L, 1);
 
   if (lua_gettop(L) == 0) {
-    return torrent::Object();
+    return {};
   } else {
     torrent::Object             result  = torrent::Object::create_list();
     torrent::Object::list_type& listRef = result.as_list();
@@ -244,8 +240,7 @@ rtorrent_call(lua_State* L) {
   lua_remove(L, 1);
   torrent::Object  object;
   rpc::target_type target = rpc::make_target();
-  rpc::CommandMap::iterator itr =
-    rpc::commands.find(std::string(method).c_str());
+  auto             itr    = rpc::commands.find(std::string(method).c_str());
   if (itr == rpc::commands.end()) {
     throw torrent::input_error("method not found: " + std::string(method));
   }

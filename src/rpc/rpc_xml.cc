@@ -9,7 +9,7 @@
 
 #include <limits>
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <xmlrpc-c/server.h>
 #ifndef XMLRPC_HAVE_I8
 static_assert(false, "XMLRPC is too old");
@@ -293,7 +293,7 @@ xmlrpc_to_object(xmlrpc_env*       env,
         // it is converted to the right type here, as an mismatch will
         // be caught when executing the command.
         *target = xmlrpc_to_target(env, value);
-        return torrent::Object();
+        return {};
 
       } else {
         const char* valueString;
@@ -394,7 +394,7 @@ xmlrpc_to_object(xmlrpc_env*       env,
         return xmlrpc_list_entry_to_object(env, value, current);
 
       } else {
-        return torrent::Object();
+        return {};
       }
     }
 
@@ -424,13 +424,11 @@ object_to_xmlrpc(xmlrpc_env* env, const torrent::Object& object) {
         const std::string& str = object.as_string();
         char* buffer = static_cast<char*>(calloc(str.size() + 1, sizeof(char)));
         char* dst    = buffer;
-        for (std::string::const_iterator itr = str.begin(); itr != str.end();
-             ++itr)
-          *dst++ =
-            ((*itr < 0x20 && *itr != '\r' && *itr != '\n' && *itr != '\t') ||
-             (*itr & 0x80))
-              ? '?'
-              : *itr;
+        for (char itr : str)
+          *dst++ = ((itr < 0x20 && itr != '\r' && itr != '\n' && itr != '\t') ||
+                    (itr & 0x80))
+                     ? '?'
+                     : itr;
         *dst = 0;
 
         result = xmlrpc_string_new(env, buffer);
@@ -443,11 +441,8 @@ object_to_xmlrpc(xmlrpc_env* env, const torrent::Object& object) {
     case torrent::Object::TYPE_LIST: {
       xmlrpc_value* result = xmlrpc_array_new(env);
 
-      for (torrent::Object::list_const_iterator itr  = object.as_list().begin(),
-                                                last = object.as_list().end();
-           itr != last;
-           itr++) {
-        xmlrpc_value* item = object_to_xmlrpc(env, *itr);
+      for (const auto& itr : object.as_list()) {
+        xmlrpc_value* item = object_to_xmlrpc(env, itr);
         xmlrpc_array_append_item(env, result, item);
         xmlrpc_DECREF(item);
       }
@@ -458,12 +453,9 @@ object_to_xmlrpc(xmlrpc_env* env, const torrent::Object& object) {
     case torrent::Object::TYPE_MAP: {
       xmlrpc_value* result = xmlrpc_struct_new(env);
 
-      for (torrent::Object::map_const_iterator itr  = object.as_map().begin(),
-                                               last = object.as_map().end();
-           itr != last;
-           itr++) {
-        xmlrpc_value* item = object_to_xmlrpc(env, itr->second);
-        xmlrpc_struct_set_value(env, result, itr->first.c_str(), item);
+      for (const auto& itr : object.as_map()) {
+        xmlrpc_value* item = object_to_xmlrpc(env, itr.second);
+        xmlrpc_struct_set_value(env, result, itr.first.c_str(), item);
         xmlrpc_DECREF(item);
       }
 
@@ -478,12 +470,8 @@ object_to_xmlrpc(xmlrpc_env* env, const torrent::Object& object) {
       xmlrpc_DECREF(key_item);
 
       if (object.as_dict_obj().is_list()) {
-        for (torrent::Object::list_const_iterator
-               itr  = object.as_dict_obj().as_list().begin(),
-               last = object.as_dict_obj().as_list().end();
-             itr != last;
-             itr++) {
-          xmlrpc_value* item = object_to_xmlrpc(env, *itr);
+        for (const auto& itr : object.as_dict_obj().as_list()) {
+          xmlrpc_value* item = object_to_xmlrpc(env, itr);
           xmlrpc_array_append_item(env, result, item);
           xmlrpc_DECREF(item);
         }
@@ -503,7 +491,7 @@ object_to_xmlrpc(xmlrpc_env* env, const torrent::Object& object) {
 
 xmlrpc_value*
 xmlrpc_call_command(xmlrpc_env* env, xmlrpc_value* args, void* voidServerInfo) {
-  CommandMap::iterator itr = commands.find((const char*)voidServerInfo);
+  auto itr = commands.find((const char*)voidServerInfo);
 
   if (itr == commands.end()) {
     xmlrpc_env_set_fault(env,
