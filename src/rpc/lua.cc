@@ -71,11 +71,11 @@ lua_to_object(lua_State* L, int index) {
   torrent::Object object;
   switch (lua_type(L, index)) {
     case LUA_TNUMBER:
-      return {lua_tonumber(L, index)};
+      return { lua_tonumber(L, index) };
     case LUA_TSTRING:
-      return {lua_tostring(L, index)};
+      return { lua_tostring(L, index) };
     case LUA_TBOOLEAN:
-      return {lua_toboolean(L, index)};
+      return { lua_toboolean(L, index) };
     case LUA_TTABLE: {
       lua_pushnil(L);
       int status = lua_next(L, -2);
@@ -104,7 +104,11 @@ lua_to_object(lua_State* L, int index) {
           switch (lua_type(L, -2)) {
             case LUA_TNUMBER:
               key = std::to_string(lua_tonumber(L, -2));
+              break;
             case LUA_TSTRING:
+              key = lua_tostring(L, -2);
+              break;
+            default:
               key = lua_tostring(L, -2);
           }
           map.insert_key(key, lua_to_object(L, -1));
@@ -117,7 +121,7 @@ lua_to_object(lua_State* L, int index) {
     default:
       std::string result = luaL_tolstring(L, index, nullptr);
       lua_pop(L, index + 1);
-      return {result};
+      return { result };
   }
   return object;
 }
