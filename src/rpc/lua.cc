@@ -71,7 +71,7 @@ lua_to_object(lua_State* L, int index) {
   torrent::Object object;
   switch (lua_type(L, index)) {
     case LUA_TNUMBER:
-      return { lua_tonumber(L, index) };
+      return { static_cast<long>(lua_tonumber(L, index)) };
     case LUA_TSTRING:
       return { lua_tostring(L, index) };
     case LUA_TBOOLEAN:
