@@ -17,6 +17,7 @@ option(USE_EXTRA_DEBUG "Enable extra debugging checks" OFF)
 option(USE_RUNTIME_CA_DETECTION "Enable runtime detection of path to CA bundle" OFF)
 option(USE_JSONRPC "Enable JSON-RPC interface" ON)
 option(USE_XMLRPC "Enable XML-RPC interface" ON)
+option(USE_LUA "Enable Lua integration" ON)
 
 # Include CMake modules
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -79,6 +80,11 @@ else()
   if(USE_XMLRPC)
     find_package(XMLRPC REQUIRED c++)
     include_directories(${XMLRPC_INCLUDE_DIRS})
+  endif()
+
+  if(USE_LUA)
+    find_package(Lua REQUIRED c++)
+    include_directories(${LUA_INCLUDE_DIRS})
   endif()
 
   file(GLOB_RECURSE RTORRENT_COMMON_SRCS "${PROJECT_SOURCE_DIR}/src/*.cc")

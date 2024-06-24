@@ -37,4 +37,9 @@ if(USE_XMLRPC)
   file(APPEND ${BUILDINFO_H} "#define HAVE_XMLRPC_C 1\n\n")
 endif()
 
+if(USE_LUA)
+  file(APPEND ${BUILDINFO_H} "/* Support for Lua */\n")
+  file(APPEND ${BUILDINFO_H} "#define HAVE_LUA 1\n\n")
+endif()
+
 file(APPEND ${BUILDINFO_H} "#endif\n")
