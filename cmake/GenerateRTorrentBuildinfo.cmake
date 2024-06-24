@@ -42,4 +42,9 @@ if(USE_LUA)
   file(APPEND ${BUILDINFO_H} "#define HAVE_LUA 1\n\n")
 endif()
 
+if(USE_POSTGRES)
+  file(APPEND ${BUILDINFO_H} "/* Support for PostgreSQL */\n")
+  file(APPEND ${BUILDINFO_H} "#define HAVE_POSTGRES 1\n\n")
+endif()
+
 file(APPEND ${BUILDINFO_H} "#endif\n")
