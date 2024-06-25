@@ -8,6 +8,8 @@
 #include <list>
 #include <string>
 
+#include <torrent/object.h>
+
 namespace torrent {
 class HashString;
 }
@@ -41,8 +43,8 @@ public:
   using base_type::empty;
   using base_type::size;
 
-  DownloadList()                    = default;
-  DownloadList(const DownloadList&) = delete;
+  DownloadList()                      = default;
+  DownloadList(const DownloadList&)   = delete;
   void operator=(const DownloadList&) = delete;
 
   void clear();

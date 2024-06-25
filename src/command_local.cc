@@ -20,8 +20,8 @@
 
 #include "core/download.h"
 #include "core/download_list.h"
-#include "core/download_store.h"
 #include "core/manager.h"
+#include "core/session_store.h"
 #include "rpc/lua.h"
 #include "rpc/parse_commands.h"
 #include "rpc/scgi.h"
@@ -205,7 +205,6 @@ cmd_file_append(const torrent::Object::list_type& args) {
 void
 initialize_command_local() {
   core::DownloadList*    dList        = control->core()->download_list();
-  core::DownloadStore*   dStore       = control->core()->download_store();
   rpc::LuaEngine*        luaEngine    = control->lua_engine();
   torrent::ChunkManager* chunkManager = torrent::chunk_manager();
   torrent::FileManager*  fileManager  = torrent::file_manager();
@@ -369,11 +368,12 @@ initialize_command_local() {
   CMD2_VAR_BOOL("session.use_lock", true);
   CMD2_VAR_BOOL("session.on_completion", true);
 
-  CMD2_ANY("session.path",
-           [dStore](const auto&, const auto&) { return dStore->path(); });
-  CMD2_ANY_STRING_V(
-    "session.path.set",
-    [dStore](const auto&, const auto& path) { return dStore->set_path(path); });
+  CMD2_ANY("session.path", [](const auto&, const auto&) {
+    return control->core()->session_store()->location();
+  });
+  CMD2_ANY_STRING_V("session.path.set", [](const auto&, const auto& path) {
+    return control->core()->session_store()->set_location(path);
+  });
 
   CMD2_ANY_V("session.save", [dList](const auto&, const auto&) {
     return dList->session_save();

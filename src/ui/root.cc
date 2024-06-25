@@ -11,8 +11,8 @@
 #include <torrent/utils/string_manip.h>
 
 #include "control.h"
-#include "core/download_store.h"
 #include "core/manager.h"
+#include "core/session_store.h"
 #include "display/frame.h"
 #include "display/window_http_queue.h"
 #include "display/window_input.h"
@@ -431,107 +431,70 @@ Root::set_input_history_size(int size) {
 
 void
 Root::load_input_history() {
-  if (!m_control->core()->download_store()->is_enabled()) {
+  if (!m_control->core()->session_store()->is_enabled()) {
     lt_log_print(torrent::LOG_DEBUG, "ignoring input history file");
     return;
   }
 
-  std::string history_filename =
-    m_control->core()->download_store()->path() + "rtorrent.input_history";
-  std::fstream history_file(history_filename.c_str(), std::ios::in);
+  torrent::Object history_obj =
+    m_control->core()->session_store()->retrieve_field(
+      "rtorrent.input_history");
+  if (!history_obj.is_list()) {
+    lt_log_print(torrent::LOG_DEBUG, "ignoring invalid history");
+    return;
+  }
 
-  if (history_file.is_open()) {
-    // Create a temp object of the content since size of history categories can
-    // be smaller than this.
-    InputHistory input_history_tmp;
+  // Create a temp object of the content since size of history categories can be
+  // smaller than this.
+  InputHistory input_history_tmp;
+  for (int type = ui::DownloadList::INPUT_LOAD_DEFAULT;
+       type != ui::DownloadList::INPUT_EOI;
+       type++)
+    input_history_tmp.insert(std::make_pair(type, InputHistoryCategory()));
 
-    for (int type = ui::DownloadList::INPUT_LOAD_DEFAULT;
-         type != ui::DownloadList::INPUT_EOI;
-         type++)
-      input_history_tmp.insert(std::make_pair(type, InputHistoryCategory()));
-
-    std::string line;
-
-    while (std::getline(history_file, line)) {
-      if (!line.empty()) {
-        size_t delim_pos = line.find("|");
-
-        if (delim_pos != std::string::npos) {
-          int type = std::atoi(line.substr(0, delim_pos).c_str());
-          InputHistory::iterator itr = input_history_tmp.find(type);
-
-          if (itr != input_history_tmp.end()) {
-            std::string input_str =
-              torrent::utils::trim(line.substr(delim_pos + 1));
-
-            if (!input_str.empty())
-              itr->second.push_back(input_str);
-          }
-        }
-      }
+  for (auto const& itr : history_obj.as_list()) {
+    int                    input_type     = itr.as_list().front().as_value();
+    std::string            input_str      = (itr.as_list().back()).as_string();
+    InputHistory::iterator input_hist_itr = input_history_tmp.find(input_type);
+    if (input_hist_itr != input_history_tmp.end() && !input_str.empty()) {
+      input_hist_itr->second.push_back(input_str);
     }
+  }
 
-    if (history_file.bad()) {
-      lt_log_print(torrent::LOG_DEBUG,
-                   "input history file corrupted, discarding (path:%s)",
-                   history_filename.c_str());
-      return;
+  for (InputHistory::const_iterator itr  = input_history_tmp.begin(),
+                                    last = input_history_tmp.end();
+       itr != last;
+       itr++) {
+    int input_history_tmp_category_length = itr->second.size();
+    InputHistory::iterator         hitr   = m_input_history.find(itr->first);
+    InputHistoryPointers::iterator pitr =
+      m_input_history_pointers.find(itr->first);
+
+    if (m_input_history_length < input_history_tmp_category_length) {
+      int pointer_offset =
+        input_history_tmp_category_length - m_input_history_length;
+
+      for (int i = 0; i != m_input_history_length; i++)
+        hitr->second.at(i) = itr->second.at((pointer_offset + i) %
+                                            input_history_tmp_category_length);
+
+      pitr->second = 0;
     } else {
-      lt_log_print(torrent::LOG_DEBUG,
-                   "input history file read (path:%s)",
-                   history_filename.c_str());
+      hitr->second = itr->second;
+      hitr->second.resize(m_input_history_length);
+
+      pitr->second = input_history_tmp_category_length % m_input_history_length;
     }
-
-    for (InputHistory::const_iterator itr  = input_history_tmp.begin(),
-                                      last = input_history_tmp.end();
-         itr != last;
-         itr++) {
-      int input_history_tmp_category_length = itr->second.size();
-      InputHistory::iterator         hitr   = m_input_history.find(itr->first);
-      InputHistoryPointers::iterator pitr =
-        m_input_history_pointers.find(itr->first);
-
-      if (m_input_history_length < input_history_tmp_category_length) {
-        int pointer_offset =
-          input_history_tmp_category_length - m_input_history_length;
-
-        for (int i = 0; i != m_input_history_length; i++)
-          hitr->second.at(i) = itr->second.at(
-            (pointer_offset + i) % input_history_tmp_category_length);
-
-        pitr->second = 0;
-      } else {
-        hitr->second = itr->second;
-        hitr->second.resize(m_input_history_length);
-
-        pitr->second =
-          input_history_tmp_category_length % m_input_history_length;
-      }
-    }
-  } else {
-    lt_log_print(torrent::LOG_DEBUG,
-                 "could not open input history file (path:%s)",
-                 history_filename.c_str());
   }
 }
 
 void
 Root::save_input_history() {
-  if (!m_control->core()->download_store()->is_enabled())
+  if (!m_control->core()->session_store()->is_enabled())
     return;
 
-  std::string history_filename =
-    m_control->core()->download_store()->path() + "rtorrent.input_history";
-  std::string  history_filename_tmp = history_filename + ".new";
-  std::fstream history_file(history_filename_tmp.c_str(),
-                            std::ios::out | std::ios::trunc);
-
-  if (!history_file.is_open()) {
-    lt_log_print(torrent::LOG_DEBUG,
-                 "could not open input history file for writing (path:%s)",
-                 history_filename.c_str());
-    return;
-  }
+  torrent::Object             result_raw = torrent::Object::create_list();
+  torrent::Object::list_type& result     = result_raw.as_list();
 
   for (InputHistory::const_iterator itr  = m_input_history.begin(),
                                     last = m_input_history.end();
@@ -541,29 +504,19 @@ Root::save_input_history() {
       m_input_history_pointers.find(itr->first);
 
     for (int i = 0; i != m_input_history_length; i++)
-      if (!itr->second.at((pitr->second + i) % m_input_history_length).empty())
-        history_file << itr->first
-                     << "|" +
-                          itr->second.at((pitr->second + i) %
-                                         m_input_history_length) +
-                          "\n";
+      if (!itr->second.at((pitr->second + i) % m_input_history_length)
+             .empty()) {
+        torrent::Object input_record_raw = torrent::Object::create_list();
+        torrent::Object::list_type& input_record = input_record_raw.as_list();
+        input_record.insert(input_record.end(), torrent::Object(itr->first));
+        input_record.insert(input_record.end(),
+                            torrent::Object(itr->second.at(
+                              (pitr->second + i) % m_input_history_length)));
+        result.insert(result.end(), input_record_raw);
+      }
   }
-
-  if (!history_file.good()) {
-    lt_log_print(
-      torrent::LOG_DEBUG,
-      "input history file corrupted during writing, discarding (path:%s)",
-      history_filename.c_str());
-    return;
-  } else {
-    lt_log_print(torrent::LOG_DEBUG,
-                 "input history file written (path:%s)",
-                 history_filename.c_str());
-  }
-
-  history_file.close();
-
-  std::rename(history_filename_tmp.c_str(), history_filename.c_str());
+  m_control->core()->session_store()->save_field("rtorrent.input_history",
+                                                 result_raw);
 }
 
 void

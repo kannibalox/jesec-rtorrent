@@ -27,8 +27,8 @@
 #include <unistd.h>
 
 #include "core/download.h"
-#include "core/download_store.h"
 #include "core/manager.h"
+#include "core/session_store.h"
 #include "rpc/parse.h"
 
 #include "command_helpers.h"
@@ -735,53 +735,58 @@ d_list_remove(core::Download*        download,
 // return the "main" tracker for this download item
 torrent::Tracker*
 get_active_tracker(torrent::Download* item) {
-    torrent::TrackerList* tl = item->tracker_list();
-    torrent::Tracker* tracker = 0;
-    torrent::Tracker* fallback = 0;
+  torrent::TrackerList* tl       = item->tracker_list();
+  torrent::Tracker*     tracker  = 0;
+  torrent::Tracker*     fallback = 0;
 
-    for (size_t trkidx = 0; trkidx < tl->size(); trkidx++) {
-        tracker = tl->at(trkidx);
-        if (tracker->is_usable() && tracker->type() == torrent::Tracker::TRACKER_HTTP) {
-            if (!fallback) fallback = tracker;
-            if (tracker->scrape_complete() || tracker->scrape_incomplete()) {
-                break;
-            }
-        }
-        tracker = 0;
+  for (size_t trkidx = 0; trkidx < tl->size(); trkidx++) {
+    tracker = tl->at(trkidx);
+    if (tracker->is_usable() &&
+        tracker->type() == torrent::Tracker::TRACKER_HTTP) {
+      if (!fallback)
+        fallback = tracker;
+      if (tracker->scrape_complete() || tracker->scrape_incomplete()) {
+        break;
+      }
     }
-    if (!tracker && tl->size()) tracker = fallback ? fallback : tl->at(0);
+    tracker = 0;
+  }
+  if (!tracker && tl->size())
+    tracker = fallback ? fallback : tl->at(0);
 
-    return tracker;
+  return tracker;
 }
 
 // return the domain name of the "main" tracker of the given download item
 std::string
 get_active_tracker_domain(torrent::Download* item) {
-    std::string url;
-    torrent::Tracker* tracker = get_active_tracker(item);
+  std::string       url;
+  torrent::Tracker* tracker = get_active_tracker(item);
 
-    if (tracker && !tracker->url().empty()) {
-        url = tracker->url();
+  if (tracker && !tracker->url().empty()) {
+    url = tracker->url();
 
-        // snip url to domain name
-        if (url.compare(0, 7, "http://")  == 0) url = url.substr(7);
-        if (url.compare(0, 8, "https://") == 0) url = url.substr(8);
-        if (url.find('/') > 0) url = url.substr(0, url.find('/'));
-        if (url.find(':') > 0) url = url.substr(0, url.find(':'));
+    // snip url to domain name
+    if (url.compare(0, 7, "http://") == 0)
+      url = url.substr(7);
+    if (url.compare(0, 8, "https://") == 0)
+      url = url.substr(8);
+    if (url.find('/') > 0)
+      url = url.substr(0, url.find('/'));
+    if (url.find(':') > 0)
+      url = url.substr(0, url.find(':'));
 
-        // remove some common cruft
-        const char* domain_cruft[] = {
-            "tracker", "1.", "2.", "001.", ".",
-            "www.", "cfdata.",
-            0
-        };
-        for (const char** cruft = domain_cruft; *cruft; cruft++) {
-            int cruft_len = strlen(*cruft);
-            if (url.compare(0, cruft_len, *cruft) == 0) url = url.substr(cruft_len);
-        }
+    // remove some common cruft
+    const char* domain_cruft[] = { "tracker", "1.",   "2.",      "001.",
+                                   ".",       "www.", "cfdata.", 0 };
+    for (const char** cruft = domain_cruft; *cruft; cruft++) {
+      int cruft_len = strlen(*cruft);
+      if (url.compare(0, cruft_len, *cruft) == 0)
+        url = url.substr(cruft_len);
     }
+  }
 
-    return url;
+  return url;
 }
 
 #define CMD2_ON_INFO(func)                                                     \
@@ -972,10 +977,10 @@ initialize_command_download() {
     return control->core()->download_list()->check_hash(download);
   });
   CMD2_DL("d.save_resume", [](const auto& download, const auto&) {
-    return control->core()->download_store()->save_resume(download);
+    return control->core()->session_store()->save_resume(download);
   });
   CMD2_DL("d.save_full_session", [](const auto& download, const auto&) {
-    return control->core()->download_store()->save_full(download);
+    return control->core()->session_store()->save_full(download);
   });
 
   CMD2_DL_V("d.update_priorities", CMD2_ON_DL(update_priorities));

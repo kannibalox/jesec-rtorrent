@@ -34,6 +34,7 @@ public:
   // load() or commit().
   void load(const std::string& uri);
   void load_raw_data(const std::string& input);
+  void load_object(const torrent::Object& obj);
   void commit();
 
   command_list_type& commands() {

@@ -31,9 +31,11 @@
 #include "core/curl_get.h"
 #include "core/download.h"
 #include "core/download_factory.h"
-#include "core/download_store.h"
 #include "core/http_queue.h"
 #include "core/manager.h"
+#include "core/session_store.h"
+#include "core/session_store_directory.h"
+#include "core/session_store_postgres.h"
 #include "core/view.h"
 #include "globals.h"
 
@@ -88,7 +90,7 @@ base64Decode(const std::string_view& input) {
     }
     decodedBytes.push_back((temp >> 16) & 0x000000FF);
     decodedBytes.push_back((temp >> 8) & 0x000000FF);
-    decodedBytes.push_back((temp)&0x000000FF);
+    decodedBytes.push_back((temp) & 0x000000FF);
   }
   return decodedBytes;
 }
@@ -102,11 +104,11 @@ Manager::push_log(const char* msg) {
 Manager::Manager()
   : m_log_important(torrent::log_open_log_buffer("important"))
   , m_log_complete(torrent::log_open_log_buffer("complete")) {
-  m_downloadStore   = new DownloadStore();
   m_downloadList    = new DownloadList();
   m_fileStatusCache = new FileStatusCache();
   m_httpQueue       = new HttpQueue();
   m_httpStack       = new CurlStack();
+  m_sessionStore    = new SessionStore();
 
   torrent::Throttle* unthrottled = torrent::Throttle::create_throttle();
   unthrottled->set_max_rate(0);
@@ -119,7 +121,7 @@ Manager::~Manager() {
 
   // TODO: Clean up logs objects.
 
-  delete m_downloadStore;
+  delete m_sessionStore;
   delete m_httpQueue;
   delete m_fileStatusCache;
 }
@@ -319,6 +321,30 @@ Manager::set_bind_address(const std::string& addr) {
   } catch (torrent::input_error& e) {
     torrent::utils::address_info::free_address_info(ai);
     throw e;
+  }
+}
+
+void
+Manager::initialize_session() {
+  std::string uri = session_store()->location();
+  if (uri.empty()) {
+    session_store()->enable(rpc::call_command_value("session.use_lock"));
+    return;
+  } else if (uri.rfind("postgresql://", 0) == 0) {
+    std::string lock_location = m_sessionStore->lock_location();
+    delete m_sessionStore;
+    m_sessionStore = new SessionStorePostgres();
+    m_sessionStore->set_location(uri);
+    m_sessionStore->set_lock_location(lock_location);
+    m_sessionStore->enable(rpc::call_command_value("session.use_lock"));
+  } else {
+    // Replace current session, copying some settings
+    std::string lock_location = m_sessionStore->lock_location();
+    delete m_sessionStore;
+    m_sessionStore = new SessionStoreDirectory();
+    m_sessionStore->set_location(uri);
+    m_sessionStore->set_lock_location(lock_location);
+    m_sessionStore->enable(rpc::call_command_value("session.use_lock"));
   }
 }
 

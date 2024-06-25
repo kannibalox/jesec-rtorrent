@@ -26,7 +26,7 @@
 #include "core/dht_manager.h"
 #include "core/download.h"
 #include "core/download_list.h"
-#include "core/download_store.h"
+#include "core/session_store.h"
 #include "ui/root.h"
 
 #define DL_TRIGGER_EVENT(download, event_name)                                 \
@@ -64,7 +64,7 @@ DownloadList::clear() {
 void
 DownloadList::session_save() {
   unsigned int c = std::count_if(begin(), end(), [](Download* download) {
-    return control->core()->download_store()->save_resume(download);
+    return control->core()->session_store()->save_resume(download);
   });
 
   if (c != size())
@@ -224,7 +224,7 @@ DownloadList::erase(iterator itr) {
 
   close(*itr);
 
-  control->core()->download_store()->remove(*itr);
+  control->core()->session_store()->remove(*itr);
 
   DL_TRIGGER_EVENT(*itr, "event.download.erased");
   for (const auto& v : *control->view_manager()) {
@@ -831,7 +831,7 @@ DownloadList::confirm_finished(Download* download) {
       rpc::call_command_value("session.on_completion") != 0) {
     //    torrent::resume_save_progress(*download->download(),
     //    download->download()->bencode()->get_key("libtorrent_resume"));
-    control->core()->download_store()->save_resume(download);
+    control->core()->session_store()->save_resume(download);
   }
 
   // Send the completed request before resuming so we don't reset the

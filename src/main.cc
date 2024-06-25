@@ -32,8 +32,8 @@
 #include "core/dht_manager.h"
 #include "core/download.h"
 #include "core/download_factory.h"
-#include "core/download_store.h"
 #include "core/manager.h"
+#include "core/session_store.h"
 #include "core/view_manager.h"
 #include "display/canvas.h"
 #include "display/manager.h"
@@ -114,78 +114,24 @@ parse_options(int                                              argc,
 }
 
 void
+load_session_torrent(core::SessionStore::SessionData sdata) {
+  core::DownloadFactory* f = new core::DownloadFactory(control->core());
+
+  // Replace with session torrent flag.
+  f->set_session(true);
+  f->set_immediate(true);
+  f->slot_finished([f]() {  delete f; });
+  torrent::Object root = sdata.main;
+  root.insert_key("rtorrent", sdata.rtorrent);
+  root.insert_key("libtorrent_resume", sdata.libtorrent_resume);
+  f->load_object(root);
+  f->commit();
+}
+
+void
 load_session_torrents() {
-  indicators::BlockProgressBar* progress_bar = nullptr;
-
-  utils::Directory entries =
-    control->core()->download_store()->get_formated_entries();
-
-  const auto entries_size = entries.size();
-
-  if (!display::Canvas::isInitialized() && entries_size) {
-    std::cout << "rTorrent: loading " << entries_size
-              << " entries from session directory" << std::endl;
-    if (isatty(fileno(stdin)) && isatty(fileno(stdout))) {
-      progress_bar = new indicators::BlockProgressBar{
-        indicators::option::BarWidth{ 50 },
-        indicators::option::ForegroundColor{ indicators::Color::white },
-        indicators::option::FontStyles{
-          std::vector<indicators::FontStyle>{ indicators::FontStyle::bold } },
-        indicators::option::MaxProgress{ entries_size + 1 }
-      };
-    }
-  }
-
-  for (const auto& entry : entries) {
-    // We don't really support session torrents that are links. These
-    // would be overwritten anyway on exit, and thus not really be
-    // useful.
-    if (!entry.is_file()) {
-      if (progress_bar != nullptr) {
-        progress_bar->tick();
-      }
-      continue;
-    }
-
-    core::DownloadFactory* f = new core::DownloadFactory(control->core());
-
-    // Replace with session torrent flag.
-    f->set_session(true);
-    f->set_immediate(true);
-    f->slot_finished([f, &progress_bar, entries_size]() {
-      if (control->is_shutdown_received()) {
-        throw std::runtime_error("shutdown received. aborting...");
-      }
-      if (progress_bar != nullptr) {
-        progress_bar->set_option(indicators::option::PostfixText{
-          std::to_string(progress_bar->current()) + "/" +
-          std::to_string(entries_size) });
-        progress_bar->tick();
-      }
-      delete f;
-    });
-
-    f->load(entries.path() + entry.d_name);
-    f->commit();
-  }
-
-  // Hash torrents
-  if (progress_bar != nullptr) {
-    progress_bar->set_option(indicators::option::PostfixText{ "Checking" });
-    progress_bar->tick();
-  }
-
-  const auto& hashing_view = *control->view_manager()->find_throw("hashing");
-  control->core()->set_hashing_view(hashing_view);
-  hashing_view->set_focus(hashing_view->focus());
-
-  priority_queue_perform(&taskScheduler, cachedTime);
-
-  if (progress_bar != nullptr) {
-    progress_bar->set_option(indicators::option::PostfixText{ "" });
-    progress_bar->mark_as_completed();
-    delete progress_bar;
-  }
+  control->core()->session_store()->set_load_callback(load_session_torrent);
+  control->core()->session_store()->load_all();
 }
 
 void

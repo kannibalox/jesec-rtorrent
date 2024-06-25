@@ -113,6 +113,20 @@ DownloadFactory::load_raw_data(const std::string& input) {
 }
 
 void
+DownloadFactory::load_object(const torrent::Object& obj) {
+  if (m_stream)
+    throw torrent::internal_error(
+      "DownloadFactory::load*() called on an object with m_stream != NULL");
+
+  if (m_object)
+    throw torrent::internal_error(
+      "DownloadFactory::load*() called on an object with m_object != NULL");
+
+  m_object = new torrent::Object(obj);
+  m_loaded = true;
+}
+
+void
 DownloadFactory::commit() {
   priority_queue_insert(&taskScheduler, &m_taskCommit, cachedTime);
 
@@ -218,17 +232,7 @@ DownloadFactory::receive_success() {
       commands.push_back(*itr);
   }
 
-  if (m_session) {
-    download_factory_add_stream(
-      root,
-      "rtorrent",
-      (torrent::utils::path_expand(m_uri) + ".rtorrent").c_str());
-    download_factory_add_stream(
-      root,
-      "libtorrent_resume",
-      (torrent::utils::path_expand(m_uri) + ".libtorrent_resume").c_str());
-
-  } else {
+  if (!m_session) {
     // We only allow session torrents to keep their
     // 'rtorrent/libtorrent' sections. The "fast_resume" section
     // should be safe to keep.

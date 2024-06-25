@@ -11,9 +11,9 @@
 #include <torrent/utils/directory_events.h>
 
 #include "core/dht_manager.h"
-#include "core/download_store.h"
 #include "core/http_queue.h"
 #include "core/manager.h"
+#include "core/session_store.h"
 #include "core/view_manager.h"
 
 #include "display/canvas.h"
@@ -86,7 +86,7 @@ Control::initialize() {
 
   m_core->initialize_second();
   m_core->listen_open();
-  m_core->download_store()->enable(rpc::call_command_value("session.use_lock"));
+  m_core->initialize_session();
 
   m_ui->init(this);
 
@@ -106,7 +106,7 @@ Control::cleanup() {
     m_inputStdin->remove(torrent::main_thread()->poll());
   }
 
-  m_core->download_store()->disable();
+  m_core->session_store()->disable();
 
   m_ui->cleanup();
   m_core->cleanup();

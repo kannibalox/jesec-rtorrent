@@ -23,7 +23,7 @@ class FileStatusCache;
 
 namespace core {
 
-class DownloadStore;
+class SessionStore;
 class HttpQueue;
 
 using ThrottleMap = std::map<std::string, torrent::ThrottlePair>;
@@ -44,8 +44,8 @@ public:
   DownloadList* download_list() {
     return m_downloadList;
   }
-  DownloadStore* download_store() {
-    return m_downloadStore;
+  SessionStore* session_store() {
+    return m_sessionStore;
   }
   FileStatusCache* file_status_cache() {
     return m_fileStatusCache;
@@ -87,6 +87,7 @@ public:
 
   // Really should find a more descriptive name.
   void initialize_second();
+  void initialize_session();
   void cleanup();
 
   void listen_open();
@@ -147,7 +148,7 @@ private:
   void receive_hashing_changed();
 
   DownloadList*    m_downloadList;
-  DownloadStore*   m_downloadStore;
+  SessionStore*    m_sessionStore;
   FileStatusCache* m_fileStatusCache;
   HttpQueue*       m_httpQueue;
   CurlStack*       m_httpStack;

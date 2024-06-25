@@ -15,8 +15,8 @@
 #include "control.h"
 #include "core/dht_manager.h"
 #include "core/download.h"
-#include "core/download_store.h"
 #include "core/manager.h"
+#include "core/session_store.h"
 
 #define LT_LOG_THIS(log_fmt, ...)                                              \
   lt_log_print_subsystem(                                                      \
@@ -48,34 +48,13 @@ DhtManager::add_bootstrap(std::string host, int port) {
 void
 DhtManager::load_dht_cache() {
   if (m_start == dht_disable ||
-      !control->core()->download_store()->is_enabled()) {
-    LT_LOG_THIS("ignoring cache file", 0);
+      !control->core()->session_store()->is_enabled()) {
+    LT_LOG_THIS("ignoring cache", 0);
     return;
   }
 
-  std::string cache_filename =
-    control->core()->download_store()->path() + "rtorrent.dht_cache";
-  std::fstream cache_stream(cache_filename.c_str(),
-                            std::ios::in | std::ios::binary);
-
-  torrent::Object cache = torrent::Object::create_map();
-
-  if (cache_stream.is_open()) {
-    cache_stream >> cache;
-
-    // If the cache file is corrupted we will just discard it with an
-    // error message.
-    if (cache_stream.fail()) {
-      LT_LOG_THIS("cache file corrupted, discarding (path:%s)",
-                  cache_filename.c_str());
-      cache = torrent::Object::create_map();
-    } else {
-      LT_LOG_THIS("cache file read (path:%s)", cache_filename.c_str());
-    }
-
-  } else {
-    LT_LOG_THIS("could not open cache file (path:%s)", cache_filename.c_str());
-  }
+  torrent::Object cache =
+    control->core()->session_store()->retrieve_field("rtorrent.dht_cache");
 
   torrent::dht_manager()->initialize(cache);
 
@@ -149,28 +128,13 @@ DhtManager::stop_dht() {
 
 void
 DhtManager::save_dht_cache() {
-  if (!control->core()->download_store()->is_enabled() ||
+  if (!control->core()->session_store()->is_enabled() ||
       !torrent::dht_manager()->is_valid())
     return;
 
-  std::string filename =
-    control->core()->download_store()->path() + "rtorrent.dht_cache";
-  std::string  filename_tmp = filename + ".new";
-  std::fstream cache_file(filename_tmp.c_str(),
-                          std::ios::out | std::ios::trunc);
-
-  if (!cache_file.is_open())
-    return;
-
   torrent::Object cache = torrent::Object::create_map();
-  cache_file << *torrent::dht_manager()->store_cache(&cache);
-
-  if (!cache_file.good())
-    return;
-
-  cache_file.close();
-
-  ::rename(filename_tmp.c_str(), filename.c_str());
+  torrent::dht_manager()->store_cache(&cache);
+  control->core()->session_store()->save_field("rtorrent.dht_cache", cache);
 }
 
 void
