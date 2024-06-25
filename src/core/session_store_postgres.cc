@@ -58,6 +58,13 @@ namespace core {
     return;
   }
 
+  void SessionStorePostgres::remove(Download* d) {
+    pqxx::work tx(*m_connection);
+    std::string hash = torrent::utils::transform_hex(d->info()->hash().begin(), d->info()->hash().end());
+    tx.exec_params0("DELETE FROM SESSION WHERE (hash = $1);", hash);
+    tx.commit();
+  }
+
   bool SessionStorePostgres::save(Download* d, int flags) {
     if (!is_enabled())
       return true;
