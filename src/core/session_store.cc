@@ -27,7 +27,7 @@ SessionStore::set_lock_location(const std::string& lock_location) {
 }
 
 void
-SessionStore::enable(bool lock) {
+SessionStore::enable(bool) {
   return;
 }
 void
@@ -36,7 +36,7 @@ SessionStore::disable() {
 }
 // Set/get operations for downloads
 bool
-SessionStore::save(Download* d, int flags) {
+SessionStore::save(Download*, int) {
   return true;
 }
 int
@@ -49,7 +49,7 @@ SessionStore::remove(session_key) {
   return;
 }
 void
-SessionStore::remove(Download* d) {
+SessionStore::remove(Download*) {
   return;
 }
 void
@@ -58,7 +58,7 @@ SessionStore::load_all() {
 }
 // Allow saving arbitrary fields in a separate place
 bool
-SessionStore::save_field(session_key key, const torrent::Object& obj) {
+SessionStore::save_field(session_key, const torrent::Object&) {
   return true;
 }
 SessionStore::field_value

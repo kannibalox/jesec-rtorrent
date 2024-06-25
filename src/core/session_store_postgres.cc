@@ -11,7 +11,7 @@
 #include "core/download.h"
 
 namespace core {
-  void SessionStorePostgres::enable(bool lock) {
+  void SessionStorePostgres::enable(bool) {
     if (is_enabled())
       throw torrent::input_error("Session database already enabled.");
 
@@ -108,9 +108,9 @@ namespace core {
       std::string torrent_string = torrent_buffer.str();
       auto torrent_bin = pqxx::binary_cast(torrent_string);
       tx.exec_prepared0("insert_session_all", hash, torrent_bin, rtorrent_bin, resume_bin);
+    } else {
+      tx.exec_prepared0("insert_session_resume", hash, rtorrent_bin, resume_bin);
     }
-    
-    tx.exec_prepared0("insert_session_resume", hash, rtorrent_bin, resume_bin);
 
     tx.commit();
     return true;
@@ -119,7 +119,7 @@ namespace core {
   SessionStore::field_value SessionStorePostgres::retrieve_field(session_key) {
     return field_value();
   }
-  bool SessionStorePostgres::save_field(session_key key, const torrent::Object& obj) {
+  bool SessionStorePostgres::save_field(session_key, const torrent::Object&) {
     return false;
   }
 }

@@ -47,25 +47,6 @@ is_network_uri(const std::string& uri) {
          std::strncmp(uri.c_str(), "ftp://", 6) == 0;
 }
 
-static bool
-download_factory_add_stream(torrent::Object* root,
-                            const char*      key,
-                            const char*      filename) {
-  std::fstream stream(filename, std::ios::in | std::ios::binary);
-
-  if (!stream.is_open())
-    return false;
-
-  torrent::Object obj;
-  stream >> obj;
-
-  if (!stream.good())
-    return false;
-
-  root->insert_key_move(key, obj);
-  return true;
-}
-
 DownloadFactory::DownloadFactory(Manager* m)
   : m_manager(m) {
 
