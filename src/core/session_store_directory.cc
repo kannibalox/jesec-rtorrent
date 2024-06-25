@@ -313,7 +313,8 @@ SessionStoreDirectory::save(Download* d, int flags) {
       write_bencode_file(base_filename + ".new",
                          *d->bencode(),
                          torrent::Object::flag_session_data))
-    ::rename((base_filename + ".new").c_str(), base_filename.c_str());
+    return false;
+  ::rename((base_filename + ".new").c_str(), base_filename.c_str());
 
   return true;
 }
