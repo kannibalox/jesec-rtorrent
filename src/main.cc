@@ -132,6 +132,10 @@ void
 load_session_torrents() {
   control->core()->session_store()->set_load_callback(load_session_torrent);
   control->core()->session_store()->load_all();
+  priority_queue_perform(&taskScheduler, cachedTime);
+  const auto& hashing_view = *control->view_manager()->find_throw("hashing");
+  control->core()->set_hashing_view(hashing_view);
+  hashing_view->set_focus(hashing_view->focus());
 }
 
 void
