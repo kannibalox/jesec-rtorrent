@@ -25,7 +25,6 @@
 
 #include "core/download.h"
 #include "core/download_factory.h"
-#include "core/download_store.h"
 
 namespace core {
 

@@ -1,13 +1,13 @@
 #include <string>
 
 #include "torrent/exceptions.h"
-#include "utils/lockfile.h"
-#include <fstream>
 #include <torrent/object.h>
 #include <torrent/object_stream.h>
+#include <torrent/utils/resume.h>
 #include <torrent/torrent.h>
 
 #include "core/session_store.h"
+#include "core/download.h"
 
 namespace core {
 void
@@ -36,7 +36,32 @@ SessionStore::disable() {
 }
 // Set/get operations for downloads
 bool
-SessionStore::save(Download*, int) {
+SessionStore::save(Download* d, int) {
+  torrent::Object* resume_base =
+    &d->download()->bencode()->get_key("libtorrent_resume");
+  torrent::Object* rtorrent_base =
+    &d->download()->bencode()->get_key("rtorrent");
+
+  // Move this somewhere else?
+  rtorrent_base->insert_key("chunks_done",
+                            d->download()->file_list()->completed_chunks());
+  rtorrent_base->insert_key("chunks_wanted",
+                            d->download()->data()->wanted_chunks());
+  rtorrent_base->insert_key("total_uploaded", d->info()->up_rate()->total());
+  rtorrent_base->insert_key("total_downloaded",
+                            d->info()->down_rate()->total());
+
+  // Don't save for completed torrents when we've cleared the uncertain_pieces.
+  torrent::resume_save_progress(*d->download(), *resume_base);
+  torrent::resume_save_uncertain_pieces(*d->download(), *resume_base);
+
+  torrent::resume_save_addresses(*d->download(), *resume_base);
+  torrent::resume_save_file_priorities(*d->download(), *resume_base);
+  torrent::resume_save_tracker_settings(*d->download(), *resume_base);
+
+  // Temp fixing of all flags, move to a better place:
+  resume_base->set_flags(torrent::Object::flag_session_data);
+  rtorrent_base->set_flags(torrent::Object::flag_session_data);
   return true;
 }
 int
