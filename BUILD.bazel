@@ -77,11 +77,14 @@ cc_library(
         "//conditions:default": [
             "-lpthread",
             "-lstdc++",
+            "-lpq",
         ],
     }),
     deps = [
         "//:buildinfo",
         "@lua",
+        "@libpqxx",
+        "@libpq",
         "@curl",
         "@json",
         "@xmlrpc",

@@ -90,6 +90,25 @@ http_archive(
 )
 
 http_archive(
+    name = "libpqxx",
+    build_file = "@rtorrent//:third_party/pqxx.BUILD",
+    strip_prefix = "libpqxx-7.9.1",
+    urls = [
+        "https://github.com/jtv/libpqxx/archive/refs/tags/7.9.1.tar.gz",
+    ],
+)
+
+http_archive(
+    name = "libpq",
+    build_file = "@rtorrent//:third_party/pq.BUILD",
+    strip_prefix = "postgresql-16.2",
+    integrity = "sha256-K4IBBH7IGs0brSnbonjXiOeJG5w+gjLtoWuyneyBMcc=",
+    urls = [
+        "https://ftp.postgresql.org/pub/source/v16.2/postgresql-16.2.tar.gz",
+    ],
+)
+
+http_archive(
     name = "json",
     build_file = "@rtorrent//:third_party/json.BUILD",
     sha256 = "b94997df68856753b72f0d7a3703b7d484d4745c567f3584ef97c96c25a5798e",
