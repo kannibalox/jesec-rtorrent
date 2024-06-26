@@ -17,6 +17,7 @@ configure_make(
         "--disable-documentation",
     ],
     copts = ["-std=c++17"],
+    deps = ["@@libpq//:libpq"],
     lib_source = ":all",
     out_static_libs = [
         "libpqxx.a",
