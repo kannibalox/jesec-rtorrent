@@ -8,6 +8,7 @@ WORKDIR /root/rtorrent
 # Install build dependencies
 RUN apt update -yqq && apt install -yqq \
     build-essential \
+    pkg-config \
     wget \
     curl \
     bash \

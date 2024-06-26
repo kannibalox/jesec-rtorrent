@@ -13,10 +13,16 @@ configure_make(
     args = [
         "-j4",  # Make it faster by using more processes.
     ],
+    configure_options = [
+        "--without-icu",
+        "--without-readline",
+        "--without-zlib",
+    ],
     out_include_dir = "src/include/",
     visibility = ["//visibility:public"],
     lib_source = ":all",
     out_static_libs = [
+        "libpq.a",
         "libecpg.a",
         "libecpg_compat.a",
         "libpgcommon.a",
@@ -25,6 +31,5 @@ configure_make(
         "libpgport.a",
         "libpgport_shlib.a",
         "libpgtypes.a",
-        "libpq.a",
     ],
 )
