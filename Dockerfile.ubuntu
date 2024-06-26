@@ -1,9 +1,23 @@
-ARG UBUNTU_VERSION=22.04
+ARG UBUNTU_VERSION=24.04
 
 FROM ubuntu:${UBUNTU_VERSION} as build
 
 ARG BAZEL_OPTS=""
 WORKDIR /root/rtorrent
+
+# Temporarily enable the proposed repo
+# https://bugs.launchpad.net/ubuntu/+source/llvm-toolchain-18/+bug/2064187
+COPY <<EOF /etc/apt/sources.list.d/ubuntu-noble-proposed.list
+# Enable Ubuntu proposed archive
+deb http://archive.ubuntu.com/ubuntu/ noble-proposed restricted main multiverse universe
+EOF
+
+COPY <<EOF /etc/apt/preferences.d/proposed-updates
+# Configure apt to allow selective installs of packages from proposed
+Package: *
+Pin: release a=noble-proposed
+Pin-Priority: 400
+EOF
 
 # Install build dependencies
 RUN apt update -yqq && apt install -yqq \
@@ -15,6 +29,8 @@ RUN apt update -yqq && apt install -yqq \
     clang \
     python3 \
     python3-pip
+
+RUN apt install -yqq llvm-18-linker-tools/noble-proposed llvm-18/noble-proposed llvm-18-dev/noble-proposed clang-18/noble-proposed
 
 RUN wget -q https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64 -O /usr/local/bin/bazel && chmod +x /usr/local/bin/bazel
 
@@ -48,23 +64,18 @@ WORKDIR /root
 
 RUN apt update -yqq && \
     apt dist-upgrade -yqq && \
-    apt install -yqq python3-pip git && \
+    apt install -yqq python3-pip git pipx sudo && \
     apt clean all
 
 # Install rTorrent and dependencies to new system root
 COPY --from=build /root/rtorrent/dist/rtorrent-deb.deb .
 
+COPY docker-entrypoint.sh /opt/docker-entrypoint.sh
+
 RUN apt install -yqq ./rtorrent-deb.deb
 
-RUN pip install git+https://github.com/kannibalox/pyrosimple.git
-
-RUN mkdir /home/download
-RUN chown 1002:1002 /home/download
-
-WORKDIR /home/download
-# Run as 1001:1001 user
-ENV HOME=/home/download
-USER 1002:1002
+RUN PIPX_HOME=/opt/pipx PIPX_BIN_DIR=/usr/local/bin PIPX_MAN_DIR=/usr/local/share/man \
+    pipx install --pip-args="--no-cache-dir" git+https://github.com/kannibalox/pyrosimple.git
 
 # rTorrent
 ENTRYPOINT ["rtorrent"]
