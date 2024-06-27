@@ -69,5 +69,6 @@ RUN apt install -yqq ./rtorrent-deb.deb
 RUN PIPX_HOME=/opt/pipx PIPX_BIN_DIR=/usr/local/bin PIPX_MAN_DIR=/usr/local/share/man \
     pipx install --pip-args="--no-cache-dir" git+https://github.com/kannibalox/pyrosimple.git
 
-# rTorrent
-ENTRYPOINT ["rtorrent"]
+# Run rTorrent by default
+ENTRYPOINT ["/opt/docker-entrypoint.sh"]
+CMD ["rtorrent"]
