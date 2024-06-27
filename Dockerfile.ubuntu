@@ -7,8 +7,8 @@ WORKDIR /root/rtorrent
 
 # Temporarily enable the proposed repo
 # https://bugs.launchpad.net/ubuntu/+source/llvm-toolchain-18/+bug/2064187
-RUN echo -e 'Package: *\nPin: release a=noble-proposed\nPin-Priority: 400' > /etc/apt/preferences.d/proposed-updates && \
-    echo -e 'deb http://archive.ubuntu.com/ubuntu/ noble-proposed restricted main multiverse universe' > /etc/apt/sources.list.d/ubuntu-noble-proposed.list
+RUN /usr/bin/echo -e 'Package: *\nPin: release a=noble-proposed\nPin-Priority: 400' > /etc/apt/preferences.d/proposed-updates && \
+    /usr/bin/echo -e 'deb http://archive.ubuntu.com/ubuntu/ noble-proposed restricted main multiverse universe' > /etc/apt/sources.list.d/ubuntu-noble-proposed.list
 
 # Install build dependencies
 RUN apt update -yqq && apt install -yqq \
