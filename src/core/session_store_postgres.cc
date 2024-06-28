@@ -92,7 +92,8 @@ namespace core {
       tx.exec_prepared0("insert_session_all", hash, torrent_bin, rtorrent_bin, resume_bin);
     } else {
       tx.exec_prepared0("insert_session_resume", hash, rtorrent_bin, resume_bin);
-    }    
+    }
+    return true;
   }
 
   bool SessionStorePostgres::save(Download* d, int flags) {
