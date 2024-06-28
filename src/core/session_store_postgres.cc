@@ -48,7 +48,7 @@ namespace core {
         int  pos = ::gethostname(buf, 255);
 
         if (pos == 0) {
-          ::snprintf(buf + std::strlen(buf), 255, ":+%i\n", ::getpid());
+          ::snprintf(buf + std::strlen(buf), 255, ":+%i", ::getpid());
         }
 
         save_field("rtorrent.lock", torrent::Object(buf));
