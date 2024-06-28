@@ -16,12 +16,14 @@ class SessionStore {
 public:
   static const int flag_skip_static = 0x1;
 
-  SessionStore() {
-    m_isEnabled = false;
-  }
   using session_key   = const std::string&;
   using session_value = const torrent::Object&;
   using field_value   = torrent::Object;
+
+  SessionStore() {
+    m_isEnabled = false;
+  }
+  virtual ~SessionStore() = default;
 
   struct SessionData {
     SessionData(session_value m, session_value r, session_value l)
