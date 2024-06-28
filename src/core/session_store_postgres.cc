@@ -1,5 +1,6 @@
 #include <string>
 #include <sstream>
+#include <unistd.h>
 
 #include "core/session_store_postgres.h"
 #include "core/session_store.h"
@@ -11,12 +12,13 @@
 #include "core/download.h"
 
 namespace core {
-  void SessionStorePostgres::enable(bool) {
+  void SessionStorePostgres::enable(bool lock) {
     if (is_enabled())
       throw torrent::input_error("Session database already enabled.");
 
     if (m_uri.empty())
       return;
+
     m_connection = std::make_unique<pqxx::connection>(m_uri);
 
     pqxx::work w(*m_connection);
@@ -31,9 +33,36 @@ namespace core {
     (*m_connection).prepare("insert_field", "INSERT INTO field (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value =  excluded.value;");
 
     m_isEnabled = true;
+
+    if (lock) {
+      torrent::Object rawLock = retrieve_field("rtorrent.lock");
+      std::string lock;
+      if (rawLock.is_empty()) {
+        lock = "";
+      } else {
+        lock = rawLock.as_string();
+      }
+      if (lock == "") {
+
+        char buf[256];
+        int  pos = ::gethostname(buf, 255);
+
+        if (pos == 0) {
+          ::snprintf(buf + std::strlen(buf), 255, ":+%i\n", ::getpid());
+        }
+
+        save_field("rtorrent.lock", torrent::Object(buf));
+        m_isLocked = true;
+      } else {
+        throw torrent::input_error("Could not lock session field, held by \"" + lock + "\"");
+      }
+    }
   }
 
   void SessionStorePostgres::disable() {
+    if (m_isLocked) {
+      remove_field("rtorrent.lock");
+    }
     m_isEnabled = false;
   }
 
@@ -62,7 +91,7 @@ namespace core {
   void SessionStorePostgres::remove(Download* d) {
     pqxx::work tx(*m_connection);
     std::string hash = torrent::utils::transform_hex(d->info()->hash().begin(), d->info()->hash().end());
-    tx.exec_params0("DELETE FROM SESSION WHERE (hash = $1);", hash);
+    tx.exec_params0("DELETE FROM session WHERE (hash = $1);", hash);
     tx.commit();
   }
 
@@ -140,5 +169,11 @@ namespace core {
     }
     tx.commit();
     return count;
+  }
+
+  void SessionStorePostgres::remove_field(session_key key) {
+    pqxx::work tx(*m_connection);
+    tx.exec_params0("DELETE FROM field WHERE (key = $1);", key);
+    tx.commit();
   }
 }

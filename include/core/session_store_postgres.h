@@ -17,10 +17,12 @@ public:
                            DownloadList::const_iterator dend);
   virtual void        remove(Download* d);
   virtual field_value retrieve_field(session_key);
+  virtual void remove_field(session_key);
   virtual bool        save_field(session_key key, const torrent::Object& obj);
   //    virtual int save_resume(DownloadList::const_iterator dstart,
   //    DownloadList::const_iterator dend);
 private:
+  bool m_isLocked;
   bool save_in_transaction(Download* d, pqxx::work& tx, int flags);
   std::unique_ptr<pqxx::connection> m_connection;
 };
