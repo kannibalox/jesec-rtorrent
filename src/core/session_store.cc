@@ -34,9 +34,9 @@ void
 SessionStore::disable() {
   return;
 }
-// Set/get operations for downloads
-bool
-SessionStore::save(Download* d, int) {
+
+void
+SessionStore::save_download_data(Download* d) {
   torrent::Object* resume_base =
     &d->download()->bencode()->get_key("libtorrent_resume");
   torrent::Object* rtorrent_base =
@@ -62,8 +62,15 @@ SessionStore::save(Download* d, int) {
   // Temp fixing of all flags, move to a better place:
   resume_base->set_flags(torrent::Object::flag_session_data);
   rtorrent_base->set_flags(torrent::Object::flag_session_data);
+}
+
+// Set/get operations for downloads
+bool
+SessionStore::save(Download* d, int) {
+  save_download_data(d);
   return true;
 }
+
 int
 SessionStore::save_resume(DownloadList::const_iterator dstart,
                           DownloadList::const_iterator dend) {

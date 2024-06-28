@@ -59,6 +59,7 @@ public:
   bool save_resume(Download* d) {
     return save(d, flag_skip_static);
   }
+  void save_download_data(Download* d);
   virtual bool save(Download* d, int flags);
   virtual int  save_resume(DownloadList::const_iterator dstart,
                            DownloadList::const_iterator dend);
