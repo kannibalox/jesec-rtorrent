@@ -13,12 +13,15 @@ public:
   virtual void        disable();
   virtual void        load_all();
   virtual bool        save(Download* d, int flags);
+  virtual int  save_resume(DownloadList::const_iterator dstart,
+                           DownloadList::const_iterator dend);
   virtual void        remove(Download* d);
   virtual field_value retrieve_field(session_key);
   virtual bool        save_field(session_key key, const torrent::Object& obj);
   //    virtual int save_resume(DownloadList::const_iterator dstart,
   //    DownloadList::const_iterator dend);
 private:
+  bool save_in_transaction(Download* d, pqxx::work& tx, int flags);
   std::unique_ptr<pqxx::connection> m_connection;
 };
 } // namespace core

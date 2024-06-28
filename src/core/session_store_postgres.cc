@@ -21,13 +21,14 @@ namespace core {
 
     pqxx::work w(*m_connection);
 
-    w.exec0("CREATE TABLE IF NOT EXISTS session (hash VARCHAR(40) UNIQUE, torrent BYTEA, rtorrent BYTEA, resume BYTEA);");
-    w.exec0("CREATE TABLE IF NOT EXISTS session (hash VARCHAR(40) UNIQUE, torrent BYTEA, rtorrent BYTEA, resume BYTEA);");
+    w.exec0("CREATE TABLE IF NOT EXISTS session (hash CHAR(40) UNIQUE, torrent BYTEA, rtorrent BYTEA, resume BYTEA);");
+    w.exec0("CREATE TABLE IF NOT EXISTS field (key VARCHAR UNIQUE, value BYTEA);");
 
     w.commit();
 
     (*m_connection).prepare("insert_session_all", "INSERT INTO session (hash, torrent, rtorrent, resume) VALUES ($1, $2, $3, $4) ON CONFLICT (hash) DO UPDATE SET torrent = excluded.torrent, rtorrent = excluded.rtorrent, resume=excluded.resume;");
     (*m_connection).prepare("insert_session_resume", "INSERT INTO session (hash, rtorrent, resume) VALUES ($1, $2, $3) ON CONFLICT (hash) DO UPDATE SET rtorrent = excluded.rtorrent, resume=excluded.resume;");
+    (*m_connection).prepare("insert_field", "INSERT INTO field (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value =  excluded.value;");
 
     m_isEnabled = true;
   }
@@ -65,37 +66,11 @@ namespace core {
     tx.commit();
   }
 
-  bool SessionStorePostgres::save(Download* d, int flags) {
-    if (!is_enabled())
-      return true;
-
+  bool SessionStorePostgres::save_in_transaction(Download* d, pqxx::work& tx, int flags) {
     torrent::Object* resume_base =
       &d->download()->bencode()->get_key("libtorrent_resume");
     torrent::Object* rtorrent_base =
       &d->download()->bencode()->get_key("rtorrent");
-
-    // Move this somewhere else?
-    rtorrent_base->insert_key("chunks_done",
-                              d->download()->file_list()->completed_chunks());
-    rtorrent_base->insert_key("chunks_wanted",
-                              d->download()->data()->wanted_chunks());
-    rtorrent_base->insert_key("total_uploaded", d->info()->up_rate()->total());
-    rtorrent_base->insert_key("total_downloaded",
-                              d->info()->down_rate()->total());
-
-    // Don't save for completed torrents when we've cleared the uncertain_pieces.
-    torrent::resume_save_progress(*d->download(), *resume_base);
-    torrent::resume_save_uncertain_pieces(*d->download(), *resume_base);
-
-    torrent::resume_save_addresses(*d->download(), *resume_base);
-    torrent::resume_save_file_priorities(*d->download(), *resume_base);
-    torrent::resume_save_tracker_settings(*d->download(), *resume_base);
-
-    // Temp fixing of all flags, move to a better place:
-    resume_base->set_flags(torrent::Object::flag_session_data);
-    rtorrent_base->set_flags(torrent::Object::flag_session_data);
-
-    pqxx::work tx(*m_connection);
 
     std::string hash = torrent::utils::transform_hex(d->info()->hash().begin(), d->info()->hash().end());
 
@@ -117,16 +92,52 @@ namespace core {
       tx.exec_prepared0("insert_session_all", hash, torrent_bin, rtorrent_bin, resume_bin);
     } else {
       tx.exec_prepared0("insert_session_resume", hash, rtorrent_bin, resume_bin);
-    }
+    }    
+  }
 
+  bool SessionStorePostgres::save(Download* d, int flags) {
+    if (!is_enabled())
+      return true;
+
+    pqxx::work tx(*m_connection);
+    save_download_data(d);
+    bool result = save_in_transaction(d, tx, flags);
+    tx.commit();
+    return result;
+  }
+
+  SessionStore::field_value SessionStorePostgres::retrieve_field(session_key key) {
+    pqxx::read_transaction tx(*m_connection);
+    std::string q = "SELECT value FROM field WHERE key = $1;";
+    for (auto [value] : tx.query<pqxx::bytes>(q, key)) {
+      torrent::Object value_data = torrent::Object();
+      read_bytea_to_obj(value, &value_data);
+      tx.commit();
+      return value_data;
+    }
+    tx.commit();
+    return field_value();
+  }
+
+  bool SessionStorePostgres::save_field(session_key key, const torrent::Object& obj) {
+    std::ostringstream value_buffer("");
+    torrent::object_write_bencode(&value_buffer, &obj, 0);
+    std::string value_string = value_buffer.str();
+    auto value_bin = pqxx::binary_cast(value_string);
+    pqxx::work tx(*m_connection);
+    tx.exec_prepared0("insert_field", key, value_bin);
     tx.commit();
     return true;
   }
 
-  SessionStore::field_value SessionStorePostgres::retrieve_field(session_key) {
-    return field_value();
-  }
-  bool SessionStorePostgres::save_field(session_key, const torrent::Object&) {
-    return false;
+  int SessionStorePostgres::save_resume(DownloadList::const_iterator dstart, DownloadList::const_iterator dend) {
+    int count = 0;
+    pqxx::work tx(*m_connection);
+    for (auto itr = dstart; dstart != dend; itr++) {
+      if (save_in_transaction(*itr, tx, 0))
+        count++;
+    }
+    tx.commit();
+    return count;
   }
 }
